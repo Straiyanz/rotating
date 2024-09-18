@@ -6,6 +6,9 @@
 #include <numbers>
 #include <string>
 
+double to_rad(double theta);
+double to_deg(double rad);
+
 void Shape::move_x(double x) {
     for (auto &co : pos) co.set_x(co.get_x() + x);
 }
@@ -19,54 +22,81 @@ void Shape::move_z(double z) {
 }
 
 void Shape::set_proj() {
-    calculate_normals();
     proj.clear();
     for (auto &co : pos) {
-        if (!co.get_z() == 0) {                    // dodge / 0 errors
-            int x1{co.get_x() * z1 / co.get_z()};  // type:ignore
-            int y1{co.get_y() * z1 / co.get_z()};  // type:ignore
-            Coord<int> temp{x1, y1};
-            if (std::find(proj.begin(), proj.end(),
-                          temp) == proj.end()) {  // z filter.
-                // if we don't find a match, add the point
-                proj.push_back(temp);
+        if (co.get_z() != 0) {  // dodge / 0 errors
+            // double x1{co.get_x() * z1 / co.get_z()};
+            // double y1{co.get_y() * z1 / co.get_z()};
+            double x1{co.get_x()};
+            double y1{co.get_y()};
+            const Coord<double> temp{x1, y1};
+            auto p = std::make_pair(temp, get_repr(temp));
+            // Z-filter: If we don't find a match, add the point.
+            if (std::find_if(proj.begin(), proj.end(), [&temp](const auto &p) {
+                    return p.first == temp;
+                }) == proj.end()) {
+                proj.push_back(p);
             }
         }
     }
 }
 
-void Shape::calculate_normals() const {
-    for (size_t i{}; i < pos.size(); i++) {
-        if (i == 0) {
-            // wrap to end
-        } else if (i == (pos.size() - 1)) {
-            // wrap to front
-        } else {
-            auto A = pos.at(i);
-            auto B = pos.at(i-1);
-            auto C = pos.at(i+1);
-            // Coord<int> normal = Coord<int>::cross((B-A), (C-A));
-            // std::cout << normal;
-        }
-        std::cout << std::endl;
+char Shape::get_repr(const Coord<double> &co) {
+    // Calculate normal
+    auto near{get_nearby(co, 2)};
+    auto B = near.front();
+    auto C = near.back();
+    auto normal{((B - co).cross(C - co)).normalize()};
+    // std::cout << "Normal for: " << co << " : " << normal << std::endl;
+    // Calculate angle with light
+    double theta = to_deg(
+        acos((light * co) / (co.get_magnitude() * light.get_magnitude())));
+    // std::cout << theta << std::endl;
+    if (std::isnan(theta)) {
+        return ' ';
     }
+    // Decide corresponding char
+    double bin_size = 180 / (lum.size() - 1);
+    int index{static_cast<int>(std::floor(theta / bin_size))};
+    // std::cout << lum[index] << std::endl;
+    return lum[index];
+}
+
+// Return the closest n coords in list form.
+std::list<Coord<double>> Shape::get_nearby(const Coord<double> &co,
+                                           const size_t n) const {
+    std::vector<Coord<double>> pos_sorted{pos};
+    std::sort(pos_sorted.begin(), pos_sorted.end(),
+              [&co](const auto &pos_co1, const auto &pos_co2) {
+                  return co.dist(pos_co1) < co.dist(pos_co2);
+              });
+    std::list<Coord<double>> result;
+    for (size_t i{1}; i <= n; i++) {
+        result.push_back(pos_sorted.at(i));
+    }
+    return result;
 }
 
 void Shape::display() const {
     std::string ss{};
-    // printf("\x1b[H");  // Move cursor to the top-left corner ("Home")
-    for (int y{-15}; y <= 15; y++) {
-        for (int x{-size * 2}; x <= size * 2; x++) {
-            if (std::find(pos.begin(), pos.end(), Coord<int>{x, y}) !=
-                pos.end()) {
-                ss += "#";
+    // printf("\x1b[2J");  // Clears the screen?
+    for (int y{-height / 2}; y < height / 2; y++) {
+        for (int x{-width / 10}; x < width / 10; x++) {
+            // narrow by y
+            Coord<double> point{static_cast<double>(x), static_cast<double>(y)};
+            auto p = std::find_if(
+                proj.begin(), proj.end(),
+                [&point](const auto &p) { return point.dist(p.first) < 1; });
+            if (p != proj.end()) {
+                for (int i{}; i < 5; i++) ss += (*p).second;
             } else {
-                ss += ".";
+                for (int i{}; i < 5; i++) ss += " ";
             }
         }
         ss += "\n";
     }
     std::cout << ss;
+    // printf("\x1b[H");   // Move cursor to the top-left corner ("Home")
 }
 
 void Shape::print_pos() const {
@@ -82,14 +112,15 @@ void Shape::print_pos() const {
 void Shape::print_proj() const {
     std::cout << "Projection into 2d:" << std::endl;
     int counter{1};
-    for (auto &co : proj) {
-        std::cout << co << " ";
+    for (auto &pa : proj) {
+        std::cout << "(" << pa.first << " " << pa.second << ") ";
         if (counter++ % size == 0) std::cout << std::endl;
     }
     std::cout << std::endl;
 }
 
 double to_rad(double theta) { return theta * std::numbers::pi / 180; }
+double to_deg(double rad) { return rad * 180 / std::numbers::pi; }
 
 void Shape::rotate_x(double theta) {
     theta = to_rad(theta);
@@ -107,7 +138,6 @@ void Shape::rotate_x(double theta) {
         co.set_y(round(y));
         co.set_z(round(z));
     }
-    set_proj();
 }
 
 void Shape::rotate_y(double theta) {
@@ -126,7 +156,6 @@ void Shape::rotate_y(double theta) {
         // y = y
         co.set_z(round(z));
     }
-    set_proj();
 }
 
 void Shape::rotate_z(double theta) {
@@ -145,5 +174,4 @@ void Shape::rotate_z(double theta) {
         co.set_y(round(y));
         // z = z
     }
-    set_proj();
 }
