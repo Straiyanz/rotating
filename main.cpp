@@ -28,23 +28,15 @@ class Cube : public Shape {
                 }
             }
         }
-        move_z(size * 2);     // move away from screen (at z=0)
+        move_z(size * -0.5);  // move away from screen (at z=0)
         move_y(size * -0.5);  // center in y
         move_x(size * -0.5);  // center in x
     }
 };
 
 int main() {
-    // const double z1{5}; // Zoom variable
 
-    Cube cube{10};
-
-    // cube.set_proj();
-    // cube.print_proj();
-    // cube.display();
-    // cube.rotate_y(45);
-    // cube.set_proj();
-    // cube.display();
+    Cube cube{20};
 
     while (true) {
         cube.rotate_x(10.0);
@@ -52,7 +44,7 @@ int main() {
         cube.rotate_z(10.0);
         cube.set_proj();
         cube.display();
-        this_thread::sleep_for(chrono::seconds(1/60));
+        // this_thread::sleep_for(chrono::seconds(1/60));
     }
 
     // Testing that stuff works...

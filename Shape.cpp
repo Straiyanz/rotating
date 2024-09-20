@@ -22,21 +22,21 @@ void Shape::move_z(double z) {
 }
 
 void Shape::set_proj() {
+    // Sort in ascnding order
+    std::sort(pos.begin(), pos.end());
     proj.clear();
-    for (auto &co : pos) {
-        if (co.get_z() != 0) {  // dodge / 0 errors
-            // double x1{co.get_x() * z1 / co.get_z()};
-            // double y1{co.get_y() * z1 / co.get_z()};
-            double x1{co.get_x()};
-            double y1{co.get_y()};
-            const Coord<double> temp{x1, y1};
-            auto p = std::make_pair(temp, get_repr(temp));
-            // Z-filter: If we don't find a match, add the point.
-            if (std::find_if(proj.begin(), proj.end(), [&temp](const auto &p) {
-                    return p.first == temp;
-                }) == proj.end()) {
-                proj.push_back(p);
-            }
+    for (auto &co : pos) { // dont display z > 0
+        // double x1{co.get_x() * z1 / co.get_z()};
+        // double y1{co.get_y() * z1 / co.get_z()};
+        double x1{co.get_x()};
+        double y1{co.get_y()};
+        const Coord<double> temp{x1, y1};
+        auto p = std::make_pair(temp, get_repr(co));
+        // Z-filter: If we don't find a match, add the point.
+        if (std::find_if(proj.begin(), proj.end(), [&temp](const auto &p) {
+                return p.first == temp;
+            }) == proj.end()) {
+            proj.push_back(p);
         }
     }
 }
@@ -48,15 +48,15 @@ char Shape::get_repr(const Coord<double> &co) {
     auto C = near.back();
     auto normal{((B - co).cross(C - co)).normalize()};
     // std::cout << "Normal for: " << co << " : " << normal << std::endl;
-    // Calculate angle with light
-    double theta = to_deg(
-        acos((light * co) / (co.get_magnitude() * light.get_magnitude())));
+    // Calculate angle of normal with light
+    double theta = acos((light * normal) /
+                        (normal.get_magnitude() * light.get_magnitude()));
     // std::cout << theta << std::endl;
     if (std::isnan(theta)) {
-        return ' ';
+        return 'n';  // this is bad!
     }
     // Decide corresponding char
-    double bin_size = 180 / (lum.size() - 1);
+    double bin_size = std::numbers::pi / (lum.size() - 1);
     int index{static_cast<int>(std::floor(theta / bin_size))};
     // std::cout << lum[index] << std::endl;
     return lum[index];
@@ -81,16 +81,16 @@ void Shape::display() const {
     std::string ss{};
     // printf("\x1b[2J");  // Clears the screen?
     for (int y{-height / 2}; y < height / 2; y++) {
-        for (int x{-width / 10}; x < width / 10; x++) {
+        for (int x{-width / 2}; x < width / 2; x++) {
             // narrow by y
             Coord<double> point{static_cast<double>(x), static_cast<double>(y)};
             auto p = std::find_if(
                 proj.begin(), proj.end(),
                 [&point](const auto &p) { return point.dist(p.first) < 1; });
             if (p != proj.end()) {
-                for (int i{}; i < 5; i++) ss += (*p).second;
+                ss += (*p).second;
             } else {
-                for (int i{}; i < 5; i++) ss += " ";
+                ss += " ";
             }
         }
         ss += "\n";
@@ -124,19 +124,12 @@ double to_deg(double rad) { return rad * 180 / std::numbers::pi; }
 
 void Shape::rotate_x(double theta) {
     theta = to_rad(theta);
-    const double sin_t = std::sin(theta);
-    const double cos_t = std::cos(theta);
+    const double sin_t = sin(theta);
+    const double cos_t = cos(theta);
 
     for (auto &co : pos) {
-        // x = x
-        double y;
-        double z;
-        // x = x
-        y = co.get_y() * cos_t + co.get_z() * sin_t;
-        z = co.get_y() * -sin_t + co.get_z() * cos_t;
-        // x = x
-        co.set_y(round(y));
-        co.set_z(round(z));
+        co.set_y(co.get_y() * cos_t - co.get_z() * sin_t);
+        co.set_z(co.get_y() * sin_t + co.get_z() * cos_t);
     }
 }
 
@@ -146,15 +139,8 @@ void Shape::rotate_y(double theta) {
     const double cos_t = cos(theta);
 
     for (auto &co : pos) {
-        double x;
-        // y = y
-        double z;
-        x = co.get_x() * cos_t + co.get_z() * -sin_t;
-        // y = y
-        z = co.get_x() * sin_t + co.get_z() * sin_t;
-        co.set_x(round(x));
-        // y = y
-        co.set_z(round(z));
+        co.set_x(co.get_x() * cos_t + co.get_z() * sin_t);
+        co.set_z(co.get_x() * -sin_t + co.get_z() * cos_t);
     }
 }
 
@@ -164,14 +150,7 @@ void Shape::rotate_z(double theta) {
     const double cos_t = cos(theta);
 
     for (auto &co : pos) {
-        double x;
-        double y;
-        // z = z
-        x = co.get_x() * cos_t + co.get_y() * -sin_t;
-        y = co.get_x() * sin_t + co.get_y() * sin_t;
-        // z = z
-        co.set_x(round(x));
-        co.set_y(round(y));
-        // z = z
+        co.set_x(co.get_x() * cos_t - co.get_y() * sin_t);
+        co.set_y(co.get_x() * sin_t + co.get_y() * cos_t);
     }
 }

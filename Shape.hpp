@@ -9,12 +9,12 @@
 
 class Shape {
    protected:
-    const std::array<char, 8> lum{".,-=+#@"};
-    Coord<double> light{0, 1, 0};
-    std::vector<Coord<double>> pos;
-    std::vector<std::pair<Coord<double>, char>> proj;
-    int z1;
-    const int size;
+    const std::array<char, 8> lum{".,-=+#@"};  // Luminosity bins
+    Coord<double> light{-1, -1, -1};           // Where light is coming from
+    std::vector<Coord<double>> pos;            // Positions
+    std::vector<std::pair<Coord<double>, char>> proj;  // Projections, chars
+    int z1;          // Z' value (if using projection, not currently)
+    const int size;  // Size of shape. Might not be needed
     const int width{115}, height{30};  // canvas dimentions
 
    private:

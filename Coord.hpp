@@ -14,12 +14,17 @@ class Coord {
 
    public:
     Coord(T x, T y, T z) : x(x), y(y), z(z) {}
-    Coord(T x, T y) : Coord<T>(x, y, 0) {}  // for 2d stuffs
+    // 2D
+    Coord(T x, T y) : Coord<T>(x, y, 0) {}
+    // No args constructor
     Coord() : Coord<T>(0, 0, 0) {}
-    // Coord(Coord<T> &&co) noexcept;          // Move constructor
-    Coord(const Coord<T> &co)
-        : Coord{co.get_x(), co.get_y(), co.get_z()} {}  // Copy constructor
-    // Coord<T> operator=(const Coord<T> &co);  // Move operator
+    // Move constructor
+    // Coord(Coord<T> &&co) noexcept;          
+
+    // Copy constructor
+    Coord(const Coord<T> &co) : Coord{co.get_x(), co.get_y(), co.get_z()} {}
+    // Move operator
+    // Coord<T> operator=(const Coord<T> &co);
     ~Coord() = default;
 
     T get_x() const { return x; }
@@ -36,24 +41,30 @@ class Coord {
         return this->x == co.get_x() && this->y == co.get_y() &&
                this->z == co.get_z();
     }
-    // Unary operators
-    Coord<T> operator-(const Coord<T> &rhs) const;  // Subtracting
-    Coord<T> operator+(const Coord<T> &co) const;   // Adding
-    T operator*(const Coord<T> &co) const;          // dot product
-    Coord<T> operator*(const T &i) const;           // Scaling
-    Coord<T> operator/(const T &i) const;           // Scaling
+    // Unary Operators
+
+    // Subtraction
+    Coord<T> operator-(const Coord<T> &rhs) const;
+    // Addition
+    Coord<T> operator+(const Coord<T> &co) const;
+    // Dot product
+    T operator*(const Coord<T> &co) const;
+    // Scaling
+    Coord<T> operator*(const T &i) const;
+    // Scaling
+    Coord<T> operator/(const T &i) const;
     // Cross product
     Coord<T> cross(const Coord<T> &co) const;
-    // Normalize the coord
+    // Normalization
     Coord<T> normalize();
-    // Calculate distance from another coord
+    // Distance from another Coord
     double dist(const Coord<T> &co) const;
 };
 
-// Calculate cross product between two coords.
+// Calculate LHS X RHS
 template <typename T>
 Coord<T> cross(const Coord<T> &lhs, const Coord<T> &rhs);
-// Distance between two coords.
+// Distance from LHS to RHS
 template <typename T>
 double dist(const Coord<T> &lhs, const Coord<T> &rhs);
 
