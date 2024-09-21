@@ -6,8 +6,9 @@
 #include <numbers>
 #include <string>
 
-double to_rad(double theta);
-double to_deg(double rad);
+// Helper functions
+double to_rad(double theta) { return theta * std::numbers::pi / 180; }
+double to_deg(double rad) { return rad * 180 / std::numbers::pi; }
 
 void Shape::move_x(double x) {
     for (auto &co : pos) co.set_x(co.get_x() + x);
@@ -25,7 +26,7 @@ void Shape::set_proj() {
     // Sort in ascnding order
     std::sort(pos.begin(), pos.end());
     proj.clear();
-    for (auto &co : pos) { // dont display z > 0
+    for (auto &co : pos) {  // dont display z > 0
         // double x1{co.get_x() * z1 / co.get_z()};
         // double y1{co.get_y() * z1 / co.get_z()};
         double x1{co.get_x()};
@@ -46,7 +47,12 @@ char Shape::get_repr(const Coord<double> &co) {
     auto near{get_nearby(co, 2)};
     auto B = near.front();
     auto C = near.back();
-    auto normal{((B - co).cross(C - co)).normalize()};
+    auto normal{co.get_normal(B, C)};
+    // Check if inside or outside of cube, if close to something then we need to
+    // If the normal
+    if (is_inside((normal * size / 2))) {
+        normal = co.get_normal(C, B);
+    }
     // std::cout << "Normal for: " << co << " : " << normal << std::endl;
     // Calculate angle of normal with light
     double theta = acos((light * normal) /
@@ -62,6 +68,17 @@ char Shape::get_repr(const Coord<double> &co) {
     return lum[index];
 }
 
+bool Shape::is_inside(const Coord<double> &co) const {
+    int size = this->get_size();
+    auto it = std::find_if(
+        pos.begin(), pos.end(),
+        [&co, size](const Coord<double> &c) { return co.dist(c) <= size / 2; });
+    if (it != pos.end()) {
+        return true;
+    }
+    return false;
+}
+
 // Return the closest n coords in list form.
 std::list<Coord<double>> Shape::get_nearby(const Coord<double> &co,
                                            const size_t n) const {
@@ -74,6 +91,10 @@ std::list<Coord<double>> Shape::get_nearby(const Coord<double> &co,
     for (size_t i{1}; i <= n; i++) {
         result.push_back(pos_sorted.at(i));
     }
+    // Debugging
+    // std::cout << "Closest coords to " << co << ": ";
+    // for (const auto &c : result) std::cout << co.dist(c) << " ";
+    // std::cout << std::endl;
     return result;
 }
 
@@ -89,6 +110,7 @@ void Shape::display() const {
                 [&point](const auto &p) { return point.dist(p.first) < 1; });
             if (p != proj.end()) {
                 ss += (*p).second;
+                // ss += (*p).second;
             } else {
                 ss += " ";
             }
@@ -118,9 +140,6 @@ void Shape::print_proj() const {
     }
     std::cout << std::endl;
 }
-
-double to_rad(double theta) { return theta * std::numbers::pi / 180; }
-double to_deg(double rad) { return rad * 180 / std::numbers::pi; }
 
 void Shape::rotate_x(double theta) {
     theta = to_rad(theta);

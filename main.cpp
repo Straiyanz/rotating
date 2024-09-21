@@ -36,14 +36,17 @@ class Cube : public Shape {
 
 int main() {
 
-    Cube cube{20};
+    Cube cube{10};
+    cube.print_pos();
+    cube.set_proj();
+    cube.print_proj();
 
     while (true) {
+        cube.set_proj();
+        cube.display();
         cube.rotate_x(10.0);
         cube.rotate_y(10.0);
         cube.rotate_z(10.0);
-        cube.set_proj();
-        cube.display();
         // this_thread::sleep_for(chrono::seconds(1/60));
     }
 

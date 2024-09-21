@@ -19,6 +19,7 @@ Currently not finished but that's the goal...
 1. Normals are not calculated correctly, or if they are the wrong one is being chosen. Could be due to a number of things:
     - Incorrect order during cross product. Might need to make sure we aren't getting the normal pointing inside the shape.
     - get_nearby() could be choosing wrong points to create cross prod with, should vefiry that the points are correct.
+2. Need to figure out why its slowly zooming away, this should not be happening. Maybe its a problem with floating point numbers? Maybe we're rounding somewhere, not sure.
 
 ## Improvements:
 

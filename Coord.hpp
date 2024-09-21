@@ -16,15 +16,17 @@ class Coord {
     Coord(T x, T y, T z) : x(x), y(y), z(z) {}
     // 2D
     Coord(T x, T y) : Coord<T>(x, y, 0) {}
+    // Constructor for a vector
+    Coord(const Coord<T> &from, const Coord<T> &to) : Coord<T>(to - from) {}
     // No args constructor
     Coord() : Coord<T>(0, 0, 0) {}
     // Move constructor
-    // Coord(Coord<T> &&co) noexcept;          
-
+    // Coord(Coord<T> &&co) noexcept;
     // Copy constructor
     Coord(const Coord<T> &co) : Coord{co.get_x(), co.get_y(), co.get_z()} {}
     // Move operator
     // Coord<T> operator=(const Coord<T> &co);
+    // Destructor
     ~Coord() = default;
 
     T get_x() const { return x; }
@@ -53,20 +55,40 @@ class Coord {
     Coord<T> operator*(const T &i) const;
     // Scaling
     Coord<T> operator/(const T &i) const;
+
+    // Helpful functions
+
     // Cross product
     Coord<T> cross(const Coord<T> &co) const;
     // Normalization
     Coord<T> normalize();
     // Distance from another Coord
-    double dist(const Coord<T> &co) const;
+    double dist(const Coord<T> &co) const {
+        return (co - *this).get_magnitude();
+    }
+    // Normal from point using two other points
+    Coord<T> get_normal(const Coord<T> &B, const Coord<T> &C) const {
+        return ((B - *this).cross(C - *this)).normalize();
+    }
 };
+
+
 
 // Calculate LHS X RHS
 template <typename T>
-Coord<T> cross(const Coord<T> &lhs, const Coord<T> &rhs);
+Coord<T> cross(const Coord<T> &lhs, const Coord<T> &rhs) {
+    return lhs.cross(rhs);
+}
 // Distance from LHS to RHS
 template <typename T>
-double dist(const Coord<T> &lhs, const Coord<T> &rhs);
+double dist(const Coord<T> &lhs, const Coord<T> &rhs) {
+    return lhs.dist(rhs);
+}
+// Get normal between two Coords
+template <typename T>
+Coord<T> get_noraml(const Coord<T> &A, const Coord<T> &B, const Coord<T> &C) {
+    return A.get_normal(B, C);
+}
 
 #include "Coord.tpp"
 

@@ -66,20 +66,8 @@ Coord<T> Coord<T>::cross(const Coord<T> &co) const {
     return Coord<T>{x, y, z};
 }
 template <typename T>
-Coord<T> cross(const Coord<T> &lhs, const Coord<T> &rhs) {
-    return lhs.cross(rhs);
-}
-template <typename T>
 Coord<T> Coord<T>::normalize() {
     T mag = get_magnitude();
     if (mag != 0) *this = *this / mag;
     return *this;
-}
-template <typename T>
-double Coord<T>::dist(const Coord<T> &co) const {
-    return (co - *this).get_magnitude();
-}
-template <typename T>
-double dist(const Coord<T> &lhs, const Coord<T> &rhs) {
-    return lhs.dist(rhs);
 }
