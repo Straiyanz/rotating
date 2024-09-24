@@ -50,16 +50,17 @@ char Shape::get_repr(const Coord<double> &co) {
     auto normal{co.get_normal(B, C)};
     // Check if inside or outside of cube, if close to something then we need to
     // If the normal
-    if (is_inside((normal * size / 2))) {
+    if (is_inside((normal * size))) {
+        // std::cout << "We were inside!" << std::endl;
         normal = co.get_normal(C, B);
     }
-    // std::cout << "Normal for: " << co << " : " << normal << std::endl;
+    std::cout << "Normal for: " << co << " : " << normal << std::endl;
     // Calculate angle of normal with light
     double theta = acos((light * normal) /
                         (normal.get_magnitude() * light.get_magnitude()));
     // std::cout << theta << std::endl;
     if (std::isnan(theta)) {
-        return 'n';  // this is bad!
+        return 'n';  // this is bad if we see n's!
     }
     // Decide corresponding char
     double bin_size = std::numbers::pi / (lum.size() - 1);
@@ -82,19 +83,20 @@ bool Shape::is_inside(const Coord<double> &co) const {
 // Return the closest n coords in list form.
 std::list<Coord<double>> Shape::get_nearby(const Coord<double> &co,
                                            const size_t n) const {
-    std::vector<Coord<double>> pos_sorted{pos};
+    std::vector<Coord<double>> pos_sorted{pos};  // copy vector
     std::sort(pos_sorted.begin(), pos_sorted.end(),
               [&co](const auto &pos_co1, const auto &pos_co2) {
                   return co.dist(pos_co1) < co.dist(pos_co2);
-              });
+              });  // sort by distance from the point
     std::list<Coord<double>> result;
+    // Take first n many, not including the point itself.
     for (size_t i{1}; i <= n; i++) {
         result.push_back(pos_sorted.at(i));
     }
     // Debugging
-    // std::cout << "Closest coords to " << co << ": ";
-    // for (const auto &c : result) std::cout << co.dist(c) << " ";
-    // std::cout << std::endl;
+    std::cout << "Closest coords to " << co << ": ";
+    for (const auto &c : result) std::cout << c << co.dist(c) << " ";
+    std::cout << std::endl;
     return result;
 }
 
@@ -107,7 +109,8 @@ void Shape::display() const {
             Coord<double> point{static_cast<double>(x), static_cast<double>(y)};
             auto p = std::find_if(
                 proj.begin(), proj.end(),
-                [&point](const auto &p) { return point.dist(p.first) < 1; });
+                [&point](const auto &p) { return point.dist(p.first) < 0.75; });
+                // return y == p.first.get_y() && abs(x - p.first.get_x()) < 0.5 });
             if (p != proj.end()) {
                 ss += (*p).second;
                 // ss += (*p).second;
@@ -143,33 +146,39 @@ void Shape::print_proj() const {
 
 void Shape::rotate_x(double theta) {
     theta = to_rad(theta);
-    const double sin_t = sin(theta);
-    const double cos_t = cos(theta);
+    const double sin_t = std::sin(theta);
+    const double cos_t = std::cos(theta);
 
+    double old_y;
     for (auto &co : pos) {
-        co.set_y(co.get_y() * cos_t - co.get_z() * sin_t);
-        co.set_z(co.get_y() * sin_t + co.get_z() * cos_t);
+        old_y = co.get_y();
+        co.set_y(old_y * cos_t - co.get_z() * sin_t);
+        co.set_z(old_y * sin_t + co.get_z() * cos_t);
     }
 }
 
 void Shape::rotate_y(double theta) {
     theta = to_rad(theta);
-    const double sin_t = sin(theta);
-    const double cos_t = cos(theta);
+    const double sin_t = std::sin(theta);
+    const double cos_t = std::cos(theta);
 
+    double old_x;
     for (auto &co : pos) {
-        co.set_x(co.get_x() * cos_t + co.get_z() * sin_t);
-        co.set_z(co.get_x() * -sin_t + co.get_z() * cos_t);
+        old_x = co.get_x();
+        co.set_x(old_x * cos_t + co.get_z() * sin_t);
+        co.set_z(-old_x * sin_t + co.get_z() * cos_t);
     }
 }
 
 void Shape::rotate_z(double theta) {
     theta = to_rad(theta);
-    const double sin_t = sin(theta);
-    const double cos_t = cos(theta);
+    const double sin_t = std::sin(theta);
+    const double cos_t = std::cos(theta);
 
+    double old_x;
     for (auto &co : pos) {
-        co.set_x(co.get_x() * cos_t - co.get_y() * sin_t);
-        co.set_y(co.get_x() * sin_t + co.get_y() * cos_t);
+        old_x = co.get_x();
+        co.set_x(old_x * cos_t - co.get_y() * sin_t);
+        co.set_y(old_x * sin_t + co.get_y() * cos_t);
     }
 }

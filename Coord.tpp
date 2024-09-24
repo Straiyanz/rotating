@@ -71,3 +71,33 @@ Coord<T> Coord<T>::normalize() {
     if (mag != 0) *this = *this / mag;
     return *this;
 }
+
+// Rotations
+
+template <typename T>
+void Coord<T>::rotate_x(double theta) {
+    theta *= std::numbers::pi / 180; // convert to radians
+    long double sin_t = std::sin(theta);
+    long double cos_t = std::cos(theta);
+    T old_y = this->get_y();
+    this->set_x(old_y * cos_t - this->get_z() * sin_t);
+    this->set_y(old_y * sin_t + this->get_z() * cos_t);
+}
+template <typename T>
+void Coord<T>::rotate_y(double theta) {
+    theta *= std::numbers::pi / 180; // convert to radians
+    long double sin_t = std::sin(theta);
+    long double cos_t = std::cos(theta);
+    T old_x = this->get_x();
+    this->set_x(old_x * cos_t - this->get_z() * sin_t);
+    this->set_y(-old_x * sin_t + this->get_z() * cos_t);
+}
+template <typename T>
+void Coord<T>::rotate_z(double theta) {
+    theta *= std::numbers::pi / 180; // convert to radians
+    long double sin_t = std::sin(theta);
+    long double cos_t = std::cos(theta);
+    T old_x = this->get_x();
+    this->set_x(old_x * cos_t - this->get_y() * sin_t);
+    this->set_y(old_x * sin_t + this->get_y() * cos_t);
+}

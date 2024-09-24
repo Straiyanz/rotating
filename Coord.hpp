@@ -1,6 +1,7 @@
 #ifndef _COORD_CPP_
 #define _COORD_CPP_
 #include <iostream>
+#include <numbers>
 
 /// @brief Coordinate system, with x, y, z points.
 /// @tparam T: Must be numerical type.
@@ -14,7 +15,7 @@ class Coord {
 
    public:
     Coord(T x, T y, T z) : x(x), y(y), z(z) {}
-    // 2D
+    // 2D Constructor
     Coord(T x, T y) : Coord<T>(x, y, 0) {}
     // Constructor for a vector
     Coord(const Coord<T> &from, const Coord<T> &to) : Coord<T>(to - from) {}
@@ -23,7 +24,7 @@ class Coord {
     // Move constructor
     // Coord(Coord<T> &&co) noexcept;
     // Copy constructor
-    Coord(const Coord<T> &co) : Coord{co.get_x(), co.get_y(), co.get_z()} {}
+    Coord(const Coord<T> &co) : Coord(co.get_x(), co.get_y(), co.get_z()) {}
     // Move operator
     // Coord<T> operator=(const Coord<T> &co);
     // Destructor
@@ -70,9 +71,12 @@ class Coord {
     Coord<T> get_normal(const Coord<T> &B, const Coord<T> &C) const {
         return ((B - *this).cross(C - *this)).normalize();
     }
+
+    void rotate_x(double theta);
+    void rotate_y(double theta);
+    void rotate_z(double theta); // Don't neccesarily need these right now...
+
 };
-
-
 
 // Calculate LHS X RHS
 template <typename T>
@@ -86,9 +90,11 @@ double dist(const Coord<T> &lhs, const Coord<T> &rhs) {
 }
 // Get normal between two Coords
 template <typename T>
-Coord<T> get_noraml(const Coord<T> &A, const Coord<T> &B, const Coord<T> &C) {
+Coord<T> get_normal(const Coord<T> &A, const Coord<T> &B, const Coord<T> &C) {
     return A.get_normal(B, C);
 }
+
+
 
 #include "Coord.tpp"
 
