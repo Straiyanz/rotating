@@ -46,14 +46,14 @@ int main() {
     // cube.set_proj();
     // cube.print_proj();
 
-    // while (true) {
-    //     cube.set_proj();
-    //     cube.display();
-    //     cube.rotate_x(10.0);
-    //     cube.rotate_y(10.0);
-    //     cube.rotate_z(10.0);
-    //     // this_thread::sleep_for(chrono::seconds(1/60));
-    // }
+    while (true) {
+        cube.set_proj();
+        cube.display();
+        cube.rotate_x(10.0);
+        cube.rotate_y(10.0);
+        cube.rotate_z(10.0);
+        // this_thread::sleep_for(chrono::seconds(1/60));
+    }
 
     // Testing that stuff works...
     {
@@ -111,6 +111,10 @@ int main() {
         Coord c3{0, 1, 0};
         cout << "Should be [ 0, 0, 1 ]: " << c1.get_normal(c2, c3) << endl;
         cout << "Should be [ 0, 0, -1 ]: " << c1.get_normal(c3, c2) << endl;
+        Coord c4{1, 0, 0};
+        Coord c5{-1, 0, 0};
+        cout << "Don't want to face this scenario: " << c1.get_normal(c4, c5)
+             << endl;
     }
     {
         cout << "\nProjection Testing:" << endl;

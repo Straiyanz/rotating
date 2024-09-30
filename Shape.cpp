@@ -23,15 +23,12 @@ void Shape::move_z(double z) {
 }
 
 void Shape::set_proj() {
-    // Sort in ascnding order
-    std::sort(pos.begin(), pos.end());
-    proj.clear();
-    for (auto &co : pos) {  // dont display z > 0
+    std::sort(pos.begin(), pos.end());  // Sort in ascending order
+    proj.clear();                       // Clear projection vector
+    for (auto &co : pos) {              // Don't display z > 0
         // double x1{co.get_x() * z1 / co.get_z()};
         // double y1{co.get_y() * z1 / co.get_z()};
-        double x1{co.get_x()};
-        double y1{co.get_y()};
-        const Coord<double> temp{x1, y1};
+        const Coord<double> temp{co.get_x(), co.get_y()};  // Create 2D Coord
         auto p = std::make_pair(temp, get_repr(co));
         // Z-filter: If we don't find a match, add the point.
         if (std::find_if(proj.begin(), proj.end(), [&temp](const auto &p) {
@@ -54,10 +51,13 @@ char Shape::get_repr(const Coord<double> &co) {
         // std::cout << "We were inside!" << std::endl;
         normal = co.get_normal(C, B);
     }
-    std::cout << "Normal for: " << co << " : " << normal << std::endl;
+    // std::cout << "Normal for: " << co << " : " << normal << std::endl;
     // Calculate angle of normal with light
-    double theta = acos((light * normal) /
-                        (normal.get_magnitude() * light.get_magnitude()));
+    // double theta = acos((light * normal) /
+    //                     (normal.get_magnitude() * light.get_magnitude()));
+    // Using cross prod formula
+    double theta = asin((light.cross(normal)).get_magnitude() /
+                        (light.get_magnitude() * normal.get_magnitude()));
     // std::cout << theta << std::endl;
     if (std::isnan(theta)) {
         return 'n';  // this is bad if we see n's!
@@ -67,6 +67,7 @@ char Shape::get_repr(const Coord<double> &co) {
     int index{static_cast<int>(std::floor(theta / bin_size))};
     // std::cout << lum[index] << std::endl;
     return lum[index];
+    // return '.';
 }
 
 bool Shape::is_inside(const Coord<double> &co) const {
@@ -90,13 +91,25 @@ std::list<Coord<double>> Shape::get_nearby(const Coord<double> &co,
               });  // sort by distance from the point
     std::list<Coord<double>> result;
     // Take first n many, not including the point itself.
-    for (size_t i{1}; i <= n; i++) {
-        result.push_back(pos_sorted.at(i));
+
+    size_t index{1};
+    Coord<double> temp;
+    while (result.size() < n) {
+        if (index != 1) {
+            temp = pos_sorted.at(index);
+            if (result.front().cross(pos_sorted.at(index)) !=
+                Coord{0.0, 0.0, 0.0}) {
+                result.push_back(pos_sorted.at(index));
+            }
+        } else {
+            result.push_back(pos_sorted.at(index));
+        }
+        index++;
     }
     // Debugging
-    std::cout << "Closest coords to " << co << ": ";
-    for (const auto &c : result) std::cout << c << co.dist(c) << " ";
-    std::cout << std::endl;
+    // std::cout << "Closest coords to " << co << ": ";
+    // for (const auto &c : result) std::cout << c << co.dist(c) << " ";
+    // std::cout << std::endl;
     return result;
 }
 
@@ -110,7 +123,6 @@ void Shape::display() const {
             auto p = std::find_if(
                 proj.begin(), proj.end(),
                 [&point](const auto &p) { return point.dist(p.first) < 0.75; });
-                // return y == p.first.get_y() && abs(x - p.first.get_x()) < 0.5 });
             if (p != proj.end()) {
                 ss += (*p).second;
                 // ss += (*p).second;

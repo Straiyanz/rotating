@@ -44,6 +44,10 @@ class Coord {
         return this->x == co.get_x() && this->y == co.get_y() &&
                this->z == co.get_z();
     }
+    bool operator!=(const Coord<T> &co) {
+        return this->x != co.get_x() || this->y != co.get_y() ||
+               this->z != co.get_z();
+    }
     // Unary Operators
 
     // Subtraction
@@ -74,8 +78,7 @@ class Coord {
 
     void rotate_x(double theta);
     void rotate_y(double theta);
-    void rotate_z(double theta); // Don't neccesarily need these right now...
-
+    void rotate_z(double theta);  // Don't neccesarily need these right now...
 };
 
 // Calculate LHS X RHS
@@ -93,8 +96,6 @@ template <typename T>
 Coord<T> get_normal(const Coord<T> &A, const Coord<T> &B, const Coord<T> &C) {
     return A.get_normal(B, C);
 }
-
-
 
 #include "Coord.tpp"
 
